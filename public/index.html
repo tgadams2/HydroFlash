@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#14603c">
+  <title>HydroFLASH</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="icon.svg" alt="" width="32" height="32">
+      <div>
+        <div class="brand-name">HydroFLASH</div>
+        <div class="brand-site" id="siteName">&nbsp;</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="pill" id="linkPill" data-state="pending" role="status">Connecting</span>
+      <button class="menu-btn" id="menuBtn" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Controller pages">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar" aria-label="Controller pages">
+      <a class="nav-link" href="#/">Status</a>
+
+      <h2>Watering</h2>
+      <a class="nav-link" href="#/program.htm">Watering programs</a>
+      <a class="nav-link" href="#/manual_control.htm">Manual watering</a>
+
+      <h2>Insteon</h2>
+      <a class="nav-link" href="#/insteon_program.htm">Insteon programs</a>
+      <a class="nav-link" href="#/insteon_control.htm">Manual Insteon</a>
+      <a class="nav-link" href="#/insteon_devices.htm">Insteon devices</a>
+
+      <h2>System</h2>
+      <a class="nav-link" href="#/settings.htm">System settings</a>
+      <a class="nav-link" href="#/network_config.htm">Network settings</a>
+      <a class="nav-link" href="#/filelist.htm">File management</a>
+      <a class="nav-link" href="#/upload_firmware.htm">Upload firmware</a>
+      <a class="nav-link" href="#/reboot.htm">Reboot</a>
+
+      <button class="nav-link nav-signout" id="signOut" type="button" hidden>Sign out</button>
+    </nav>
+
+    <main>
+     <div id="statusView">
+      <section class="hero" id="hero" data-state="pending" aria-live="polite">
+        <div class="hero-icon" id="heroIcon" aria-hidden="true"></div>
+        <div class="hero-text">
+          <h1 id="heroTitle">Loading status…</h1>
+          <p id="heroDetail">&nbsp;</p>
+        </div>
+        <div class="hero-clock">
+          <div class="label">Controller time</div>
+          <div id="clock">—</div>
+        </div>
+      </section>
+
+      <div class="cards">
+        <section class="card">
+          <header><h2>Watering stations</h2><span class="count" id="stationCount"></span></header>
+          <div id="stations" class="rows"><p class="empty">Waiting for the controller…</p></div>
+        </section>
+
+        <section class="card">
+          <header><h2>Insteon devices</h2><span class="count" id="insteonCount"></span></header>
+          <div id="insteon" class="rows"><p class="empty">Waiting for the controller…</p></div>
+        </section>
+
+        <section class="card">
+          <header><h2>Current weather</h2><span class="sub">Updated hourly</span></header>
+          <div id="weather"><p class="empty">Waiting for the controller…</p></div>
+        </section>
+
+        <section class="card">
+          <header><h2>Today</h2></header>
+          <div class="sun">
+            <div class="sun-times">
+              <div><div class="label">Sunrise</div><div class="value" id="sunrise">—</div></div>
+              <div class="right"><div class="label">Sunset</div><div class="value" id="sunset">—</div></div>
+            </div>
+            <div class="sun-track" id="sunTrack" hidden><div class="sun-dot" id="sunDot"></div></div>
+          </div>
+          <div class="adjust">
+            <div class="adjust-value" id="adjustValue">—</div>
+            <div>
+              <div class="label">Watering time adjustment</div>
+              <div class="muted" id="adjustText">Based on temperature</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card wide">
+          <header><h2>NOAA forecast</h2><a class="sub" id="noaaLink" target="_blank" rel="noopener" hidden>Local weather map ↗</a></header>
+          <div id="forecast"><p class="empty">Waiting for the controller…</p></div>
+        </section>
+
+        <section class="card wide">
+          <header><h2>System</h2></header>
+          <dl class="facts" id="system"></dl>
+        </section>
+      </div>
+
+      <footer>
+        <span id="updated">Not yet updated</span>
+        <span>Refreshes every 5 seconds ·
+          <a href="http://forum.hydroflash.net" target="_blank" rel="noopener">Support forum ↗</a></span>
+      </footer>
+     </div>
+
+     <div id="pageView" hidden>
+      <header class="page-head">
+        <div>
+          <h1 id="pageTitle">&nbsp;</h1>
+          <p class="muted" id="pageSub"></p>
+        </div>
+        <button class="btn" id="pageRefresh" type="button">Refresh</button>
+      </header>
+      <nav class="tabs" id="pageTabs" aria-label="Sections" hidden></nav>
+      <div id="pageNotices" aria-live="polite"></div>
+      <div class="legacy" id="pageBody"></div>
+     </div>
+    </main>
+  </div>
+
+  <dialog id="signInDialog" class="dialog">
+    <form method="dialog" id="signInForm">
+      <h2>Sign in to the controller</h2>
+      <p class="muted" id="signInNote">Settings and controls use the controller's own user name and password.</p>
+      <label>User name <input id="signInUser" name="username" autocomplete="username" autocapitalize="none" required></label>
+      <label>Password <input id="signInPass" name="password" type="password" autocomplete="current-password" required></label>
+      <div class="dialog-actions">
+        <button class="btn" type="button" id="signInCancel">Cancel</button>
+        <button class="btn primary" type="submit">Sign in</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirmDialog" class="dialog">
+    <form method="dialog">
+      <h2 id="confirmTitle"></h2>
+      <p id="confirmText"></p>
+      <div class="dialog-actions">
+        <button class="btn" value="cancel">Cancel</button>
+        <button class="btn primary" id="confirmOk" value="ok"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="busy" id="busy" hidden role="alert"><div class="busy-box"><div class="spinner"></div><h2 id="busyTitle"></h2><p id="busyText"></p></div></div>
+  <div class="toast" id="toast" hidden role="status"></div>
+
+  <script src="app.js" defer></script>
+  <script src="controller.js" defer></script>
+</body>
+</html>

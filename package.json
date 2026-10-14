@@ -1,0 +1,12 @@
+{
+  "name": "hydroflash-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Responsive status dashboard for a HydroFLASH irrigation controller",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
