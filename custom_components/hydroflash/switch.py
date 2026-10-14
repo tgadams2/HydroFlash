@@ -65,7 +65,9 @@ class HydroFlashStationSwitch(HydroFlashEntity, SwitchEntity):
     @property
     def name(self) -> str | None:
         station = self._station
-        return station.name if station else f"Station {self._number}"
+        label = station.name if station else f"Station {self._number}"
+        # Zero-pad so the zones sort numerically (e.g. 02 before 10).
+        return f"{self._number:02d} · {label}"
 
     @property
     def is_on(self) -> bool:
