@@ -10,7 +10,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import HydroFlashClient
 from .coordinator import HydroFlashCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.SENSOR, Platform.BUTTON]
+PLATFORMS: list[Platform] = [
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+]
 
 type HydroFlashConfigEntry = ConfigEntry[HydroFlashCoordinator]
 

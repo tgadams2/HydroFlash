@@ -12,12 +12,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HydroFlashConfigEntry
-from .const import (
-    ATTR_MINUTES,
-    CONF_DEFAULT_MINUTES,
-    DEFAULT_RUN_MINUTES,
-    SERVICE_RUN_FOR,
-)
+from .const import ATTR_MINUTES, SERVICE_RUN_FOR
 from .coordinator import HydroFlashCoordinator
 from .entity import HydroFlashEntity
 
@@ -85,14 +80,9 @@ class HydroFlashStationSwitch(HydroFlashEntity, SwitchEntity):
             "running_from_program": station.program_on,
         }
 
-    @property
-    def _default_minutes(self) -> int:
-        return self.coordinator.entry.options.get(
-            CONF_DEFAULT_MINUTES, DEFAULT_RUN_MINUTES
-        )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
-        await self.async_run_for(self._default_minutes)
+        # Use this zone's editable run time (falls back to the default).
+        await self.async_run_for(self.coordinator.minutes_for(self._number))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.client.async_stop_station(self._number)

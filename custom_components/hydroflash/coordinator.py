@@ -10,7 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AuthError, ControllerData, HydroFlashClient, HydroFlashError
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_DEFAULT_MINUTES,
+    DEFAULT_RUN_MINUTES,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +37,19 @@ class HydroFlashCoordinator(DataUpdateCoordinator[ControllerData]):
         )
         self.entry = entry
         self.client = client
+        # Per-zone manual run time (minutes) chosen in the UI. The controller
+        # has no per-zone storage, so this lives in HA; the number entities
+        # own it and the switches read it when turned on.
+        self.run_minutes: dict[int, int] = {}
+
+    @property
+    def default_minutes(self) -> int:
+        """The configured default manual run time."""
+        return self.entry.options.get(CONF_DEFAULT_MINUTES, DEFAULT_RUN_MINUTES)
+
+    def minutes_for(self, station: int) -> int:
+        """Run time to use for a station: its set value, else the default."""
+        return self.run_minutes.get(station, self.default_minutes)
 
     async def _async_update_data(self) -> ControllerData:
         try:
