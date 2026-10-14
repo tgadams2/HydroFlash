@@ -22,6 +22,10 @@ import aiohttp
 STATUS_PATH = "/FS/RAM0/status.xml"
 MANUAL_PATH = "/manual_control.htm"
 MANUAL_FORM = "/Forms/update_man.htm"
+PROGRAM_FORM = "/Forms/manual_program_ctl.htm"
+
+# Watering programs the controller exposes (Program 1..4).
+PROGRAM_COUNT = 4
 
 # Collapses the whitespace the device sprinkles between tags so the row
 # patterns below can stay simple.
@@ -51,6 +55,15 @@ class ControllerData:
 
     stations: dict[int, Station] = field(default_factory=dict)
     status: dict[str, str] = field(default_factory=dict)
+
+    @property
+    def program_running(self) -> bool:
+        """True if any station is currently being watered by a program.
+
+        The controller does not report which program is active, only that a
+        program is driving some station, so this is a single global flag.
+        """
+        return any(station.program_on for station in self.stations.values())
 
 
 class HydroFlashError(Exception):
@@ -172,3 +185,27 @@ class HydroFlashClient:
                 "Submit": "Turn OFF",
             },
         )
+
+    async def _program_action(self, program: int, action: str) -> None:
+        """POST a manual-program-control action for Program `program` (1-based)."""
+        await self._request(
+            "POST",
+            PROGRAM_FORM,
+            data={
+                # The controller numbers programs from 0 as an 8-digit value.
+                "ProgramNumValueSingle": f"{program - 1:08d}",
+                "Submit": action,
+            },
+        )
+
+    async def async_start_program(self, program: int) -> None:
+        """Manually start a watering program (1-based)."""
+        await self._program_action(program, "Start Program")
+
+    async def async_cancel_program(self, program: int) -> None:
+        """Cancel the running watering program."""
+        await self._program_action(program, "Cancel Program")
+
+    async def async_skip_station(self, program: int) -> None:
+        """Advance the running program to its next station."""
+        await self._program_action(program, "Skip Station")

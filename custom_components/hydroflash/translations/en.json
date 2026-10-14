@@ -34,6 +34,11 @@
       "rain_delay": { "name": "Rain delay" },
       "cloud": { "name": "Cloud connection" },
       "uptime": { "name": "Controller uptime" }
+    },
+    "button": {
+      "start_program": { "name": "Start program {program}" },
+      "cancel_program": { "name": "Cancel program" },
+      "skip_station": { "name": "Skip station" }
     }
   },
   "services": {
