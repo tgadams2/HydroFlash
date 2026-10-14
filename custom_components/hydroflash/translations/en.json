@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to HydroFLASH",
+        "description": "Enter the controller's address and web login.",
+        "data": {
+          "host": "Host or IP address",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the controller.",
+      "invalid_auth": "The username or password was rejected."
+    },
+    "abort": {
+      "already_configured": "This controller is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HydroFLASH options",
+        "data": {
+          "default_minutes": "Default manual run time (minutes)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "rain_delay": { "name": "Rain delay" },
+      "cloud": { "name": "Cloud connection" },
+      "uptime": { "name": "Controller uptime" }
+    }
+  },
+  "services": {
+    "run_for": {
+      "name": "Run for",
+      "description": "Turn a station on for a specific number of minutes.",
+      "fields": {
+        "minutes": {
+          "name": "Minutes",
+          "description": "How long to run the station."
+        }
+      }
+    }
+  }
+}
