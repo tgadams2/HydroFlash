@@ -59,4 +59,5 @@ class HydroFlashCoordinator(DataUpdateCoordinator[ControllerData]):
             raise UpdateFailed(f"Authentication failed: {err}") from err
         except HydroFlashError as err:
             raise UpdateFailed(f"Error talking to controller: {err}") from err
-        return ControllerData(stations=stations, status=status)
+        active = self.client.parse_active(status.pop("xml", ""))
+        return ControllerData(stations=stations, status=status, active=active)

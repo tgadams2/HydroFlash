@@ -31,14 +31,35 @@
   },
   "entity": {
     "sensor": {
-      "rain_delay": { "name": "Rain delay" },
-      "cloud": { "name": "Cloud connection" },
-      "uptime": { "name": "Controller uptime" }
+      "running_zone": {
+        "name": "Running zone"
+      },
+      "running_program": {
+        "name": "Running program"
+      },
+      "time_remaining": {
+        "name": "Zone time remaining"
+      },
+      "rain_delay": {
+        "name": "Rain delay"
+      },
+      "cloud": {
+        "name": "Cloud connection"
+      },
+      "uptime": {
+        "name": "Controller uptime"
+      }
     },
     "button": {
-      "start_program": { "name": "Start program {program}" },
-      "cancel_program": { "name": "Cancel program" },
-      "skip_station": { "name": "Skip station" }
+      "start_program": {
+        "name": "Start program {program}"
+      },
+      "cancel_program": {
+        "name": "Cancel program"
+      },
+      "skip_station": {
+        "name": "Skip station"
+      }
     }
   },
   "services": {

@@ -65,19 +65,27 @@ class HydroFlashStationSwitch(HydroFlashEntity, SwitchEntity):
         return f"{self._number:02d} · {label}"
 
     @property
+    def _active(self):
+        return self.coordinator.data.active.get(self._number)
+
+    @property
     def is_on(self) -> bool:
+        # status.xml lists every station watering now, manual or program; the
+        # manual-control page only shows manual runs.
         station = self._station
-        return bool(station and station.is_on)
+        return self._active is not None or bool(station and station.is_on)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         station = self._station
         if not station:
             return {}
+        active = self._active
         return {
             "station_number": station.number,
-            "remaining_seconds": station.remaining_seconds,
-            "running_from_program": station.program_on,
+            "remaining_seconds": active.remaining_seconds if active else station.remaining_seconds if station.is_on else 0,
+            "running_from_program": bool(active and active.mode.lower() == "program") or station.program_on,
+            "program": active.program if active else None,
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:

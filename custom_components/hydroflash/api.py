@@ -7,7 +7,9 @@ parsing those pages. The parsing here is deliberately tolerant of the
 quirky, whitespace-heavy markup the device emits.
 
 Verified endpoints:
-  GET  /FS/RAM0/status.xml          -> system status (rain delay, uptime, ...)
+  GET  /FS/RAM0/status.xml          -> system status (rain delay, uptime, ...) plus a
+                                       <STATION> block for each station watering now,
+                                       manual or program (time remaining, program number)
   POST /manual_control.htm          -> station table (name / state / remaining)
   POST /Forms/update_man.htm        -> start or stop a station
 """
@@ -50,20 +52,38 @@ class Station:
 
 
 @dataclass
+class ActiveStation:
+    """A station the controller reports as watering right now (from status.xml)."""
+
+    number: int
+    name: str
+    remaining_seconds: int
+    mode: str  # "Program" or "Manual"
+    program: int | None
+
+
+@dataclass
 class ControllerData:
     """A snapshot of everything the coordinator polls."""
 
     stations: dict[int, Station] = field(default_factory=dict)
     status: dict[str, str] = field(default_factory=dict)
+    active: dict[int, ActiveStation] = field(default_factory=dict)
 
     @property
     def program_running(self) -> bool:
-        """True if any station is currently being watered by a program.
+        """True if any station is currently being watered by a program."""
+        return any(a.mode.lower() == "program" for a in self.active.values()) or any(
+            station.program_on for station in self.stations.values()
+        )
 
-        The controller does not report which program is active, only that a
-        program is driving some station, so this is a single global flag.
-        """
-        return any(station.program_on for station in self.stations.values())
+    @property
+    def running_program(self) -> int | None:
+        """Number of the program watering now, if any."""
+        for a in self.active.values():
+            if a.mode.lower() == "program" and a.program:
+                return a.program
+        return None
 
 
 class HydroFlashError(Exception):
@@ -72,6 +92,18 @@ class HydroFlashError(Exception):
 
 class AuthError(HydroFlashError):
     """Raised when the controller rejects the credentials."""
+
+
+def _hms(text: str) -> int:
+    """'HH:MM:SS' (or 'MM:SS') -> seconds; 0 if unreadable."""
+    try:
+        parts = [int(p) for p in text.strip().split(":")]
+    except ValueError:
+        return 0
+    secs = 0
+    for p in parts:
+        secs = secs * 60 + p
+    return secs
 
 
 def _tag(xml: str, tag: str) -> str:
@@ -128,7 +160,27 @@ class HydroFlashClient:
             and "Disconnected" not in cloud,
             "uptime": _tag(xml, "CPUTIME"),
             "rain_delay": _tag(xml, "RAINDELAY"),
+            "xml": xml,
         }
+
+    @staticmethod
+    def parse_active(xml: str) -> dict[int, ActiveStation]:
+        """The <STATION> blocks in status.xml: what is watering right now."""
+        active: dict[int, ActiveStation] = {}
+        for block in re.findall(r"<STATION>(.*?)</STATION", xml, re.DOTALL | re.IGNORECASE):
+            try:
+                number = int(_tag(block, "NUMBER"))
+            except ValueError:
+                continue
+            prog = _tag(block, "PROGRAMNUM")
+            active[number] = ActiveStation(
+                number=number,
+                name=_tag(block, "DESCRIPTION"),
+                remaining_seconds=_hms(_tag(block, "TIMEREMAINING")),
+                mode=_tag(block, "MODE") or "Manual",
+                program=int(prog) if prog.isdigit() and int(prog) > 0 else None,
+            )
+        return active
 
     async def async_get_stations(self) -> dict[int, Station]:
         """Parse the manual-control page into Station objects.
