@@ -66,9 +66,12 @@ class CancelProgramButton(HydroFlashEntity, ButtonEntity):
         return {"program_running": self.coordinator.data.program_running}
 
     async def async_press(self) -> None:
-        # The controller cancels the active program regardless of the number;
-        # program 1 is a safe placeholder for the form field.
-        await self.coordinator.client.async_cancel_program(1)
+        # The controller only cancels the program selected in the form, so
+        # send the running one (from status.xml); if unknown, cancel them all.
+        await self.coordinator.async_refresh()
+        running = self.coordinator.data.running_program
+        for program in [running] if running else range(1, PROGRAM_COUNT + 1):
+            await self.coordinator.client.async_cancel_program(program)
         await self.coordinator.async_request_refresh()
 
 
@@ -84,5 +87,9 @@ class SkipStationButton(HydroFlashEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.entry.entry_id}_skip_station"
 
     async def async_press(self) -> None:
-        await self.coordinator.client.async_skip_station(1)
+        # Like cancel, skip applies to the program selected in the form.
+        await self.coordinator.async_refresh()
+        running = self.coordinator.data.running_program
+        if running:
+            await self.coordinator.client.async_skip_station(running)
         await self.coordinator.async_request_refresh()

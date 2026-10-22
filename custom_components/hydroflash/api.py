@@ -255,7 +255,7 @@ class HydroFlashClient:
         await self._program_action(program, "Start Program")
 
     async def async_cancel_program(self, program: int) -> None:
-        """Cancel the running watering program."""
+        """Cancel watering program `program` (1-based); other programs are unaffected."""
         await self._program_action(program, "Cancel Program")
 
     async def async_skip_station(self, program: int) -> None:
